@@ -77,7 +77,7 @@ class KNearestNeighbor(object):
                 #####################################################################
                 # *****START OF YOUR CODE*****
 
-                pass
+                dists[i, j] = np.sqrt(np.sum((X[i] - self.X_train[j]) ** 2))
 
                 # *****END OF YOUR CODE*****
         return dists
@@ -100,8 +100,7 @@ class KNearestNeighbor(object):
             # Do not use np.linalg.norm().                                        #
             #######################################################################
             # *****START OF YOUR CODE*****
-
-            pass
+            dists[i, :] = np.sqrt(np.sum((X[i] - self.X_train) ** 2, axis=1))
 
             # *****END OF YOUR CODE*****
         return dists
@@ -131,7 +130,13 @@ class KNearestNeighbor(object):
         #########################################################################
         # *****START OF YOUR CODE*****
 
-        pass
+        #dists = np.sqrt(-2 * np.matmul(X, self.X_train.T) + np.sum(X**2, axis=1) + np.sum(self.X_train**2, axis=1))
+
+        dists = np.sqrt(
+            -2 * np.matmul(X, self.X_train.T) + 
+            np.sum(X**2, axis=1)[:, np.newaxis] +  # Делаем вектор столбцом
+            np.sum(self.X_train**2, axis=1)[np.newaxis, :]  # Делаем вектор строкой
+        )
 
         # *****END OF YOUR CODE*****
         return dists
@@ -164,7 +169,10 @@ class KNearestNeighbor(object):
             #########################################################################
             # *****START OF YOUR CODE*****
 
-            pass
+            sorted_indices = np.argsort(dists[i, :])
+            closest_indices = sorted_indices[:k]
+            
+            closest_y = self.y_train[closest_indices]
 
             # *****END OF YOUR CODE*****
             #########################################################################
@@ -175,8 +183,11 @@ class KNearestNeighbor(object):
             # label.                                                                #
             #########################################################################
             # *****START OF YOUR CODE*****
-
-            pass
+            
+            unique_labels, counts = np.unique(closest_y, return_counts=True)
+            max_count = np.max(counts)
+            candidates = unique_labels[counts == max_count]
+            y_pred[i] = np.min(candidates)
 
             # *****END OF YOUR CODE*****
 
