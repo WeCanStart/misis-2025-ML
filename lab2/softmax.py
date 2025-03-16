@@ -87,7 +87,7 @@ def softmax_loss_vectorized(W, X, y, reg):
     B = np.zeros_like(softmax_probs)  
     B[np.arange(X.shape[0]), y] = 1
 
-    dW = X.T @ (softmax_probs - B) / X.shape[0]
+    dW = X.T @ (softmax_probs - B) / X.shape[0] + 2 * reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
