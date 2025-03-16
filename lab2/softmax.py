@@ -34,7 +34,23 @@ def softmax_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    results = X @ W
+
+    for i in range(results.shape[0]):
+        loss += -results[i][y[i]] + np.log(np.sum(np.exp(results[i])))
+
+    # left part is -(B * X).T, B is corrects like (1 0 0)
+    #                                             (0 1 1)
+    # plus 
+    loss /= results.shape[0]
+    loss += reg * np.sum(W * W)
+
+    B = np.zeros((results.shape[0], results.shape[1]))
+    for i in range(results.shape[0]):
+        B[i][y[i]] = 1
+    dW = X.T @ (np.exp(results) / np.exp(results).sum(axis=1, keepdims=True) - B)
+    dW /= results.shape[0]
+    dW += 2 * reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -59,7 +75,19 @@ def softmax_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    results = X @ W
+    results -= np.max(results, axis=1, keepdims=True)
+
+    exp_results = np.exp(results)
+    softmax_probs = exp_results / np.sum(exp_results, axis=1, keepdims=True)
+
+    correct_class_probs = softmax_probs[np.arange(X.shape[0]), y]
+    loss = -np.mean(np.log(correct_class_probs)) + reg * np.sum(W * W)
+
+    B = np.zeros_like(softmax_probs)  
+    B[np.arange(X.shape[0]), y] = 1
+
+    dW = X.T @ (softmax_probs - B) / X.shape[0]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
