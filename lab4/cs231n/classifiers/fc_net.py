@@ -79,7 +79,7 @@ class FullyConnectedNet(object):
             self.params[f'W{i+1}'] = np.random.normal(0, weight_scale, (layer_dims[i], layer_dims[i+1]))
             self.params[f'b{i+1}'] = np.zeros(layer_dims[i+1])
 
-            if self.normalization == 'batchnorm' and i < self.num_layers - 1:
+            if (self.normalization == 'batchnorm' or self.normalization == 'layernorm') and i < self.num_layers - 1:
                 self.params[f'gamma{i+1}'] = np.ones(layer_dims[i+1])
                 self.params[f'beta{i+1}'] = np.zeros(layer_dims[i+1])
 
