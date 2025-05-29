@@ -139,6 +139,16 @@ class CaptioningRNN:
         # You also don't have to implement the backward pass.                      #
         ############################################################################
         # 
+
+        h0 = features @ W_proj + b_proj
+        word_embeddings = W_embed[captions_in]
+        if self.cell_type == 'rnn':
+            h, _ = rnn_forward(word_embeddings, h0, Wx, Wh, b)
+        else:
+            h, _, = lstm_forward(word_embeddings, h0, Wx, Wh, b)
+        
+        scores = h @ W_vocab + b_vocab
+        loss = temporal_softmax_loss(scores, captions_out, mask)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -202,7 +212,25 @@ class CaptioningRNN:
         # NOTE: we are still working over minibatches in this function. Also if   #
         # you are using an LSTM, initialize the first cell state to zeros.        #
         ###########################################################################
-        # 
+        
+        h = features @ W_proj + b_proj
+        
+        word_idx = self._start * torch.ones((N, 1), dtype=torch.long)
+      
+        c = torch.zeros_like(h) if self.cell_type == 'lstm' else None
+        
+        for t in range(max_length):
+            x = W_embed[word_idx.squeeze()]
+            
+            if self.cell_type == 'rnn':
+                h, _ = rnn_step_forward(x, h, Wx, Wh, b)
+            else:
+                h, c, _ = lstm_step_forward(x, h, c, Wx, Wh, b)
+            
+            scores = h @ W_vocab + b_vocab
+          
+            word_idx = torch.argmax(scores, dim=1).unsqueeze(1)
+            captions[:, t] = word_idx.squeeze()
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################

@@ -43,7 +43,9 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     ##############################################################################
     # TODO: Implement a single forward step for the vanilla RNN.                 #
     ##############################################################################
-    # 
+    a = x @ Wx + prev_h @ Wh + b
+    
+    next_h = torch.tanh(a)
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -73,7 +75,14 @@ def rnn_forward(x, h0, Wx, Wh, b):
     # input data. You should use the rnn_step_forward function that you defined  #
     # above. You can use a for loop to help compute the forward pass.            #
     ##############################################################################
-    # 
+    N, T, D = x.shape
+    H = h0.shape[1]
+    
+    h = torch.zeros((N, T, H), dtype=x.dtype, device=x.device)
+    prev_h = h0
+    for t in range(T):
+        prev_h = rnn_step_forward(x[:, t, :], prev_h, Wx, Wh, b)
+        h[:, t, :] = prev_h
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -101,7 +110,7 @@ def word_embedding_forward(x, W):
     #                                                                            #
     # HINT: This can be done in one line using Pytorch's array indexing.         #
     ##############################################################################
-    # 
+    out = W[x]
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -133,7 +142,16 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
     # TODO: Implement the forward pass for a single timestep of an LSTM.        #
     # You may want to use the numerically stable sigmoid implementation above.  #
     #############################################################################
-    # 
+    N, H = prev_h.shape
+    a = x @ Wx + prev_h @ Wh + b
+    
+    i = torch.sigmoid(a[:, :H])           # input gate
+    f = torch.sigmoid(a[:, H:2*H])        # forget gate
+    o = torch.sigmoid(a[:, 2*H:3*H])      # output gate
+    g = torch.tanh(a[:, 3*H:])            # cell gate
+    
+    next_c = f * prev_c + i * g
+    next_h = o * torch.tanh(next_c)
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -167,7 +185,17 @@ def lstm_forward(x, h0, Wx, Wh, b):
     # TODO: Implement the forward pass for an LSTM over an entire timeseries.   #
     # You should use the lstm_step_forward function that you just defined.      #
     #############################################################################
-    # 
+    N, T, D = x.shape
+    H = h0.shape[1]
+    
+    h = torch.zeros((N, T, H), dtype=x.dtype, device=x.device)
+    
+    prev_h = h0
+    prev_c = torch.zeros_like(h0)
+    
+    for t in range(T):
+        prev_h, prev_c = lstm_step_forward(x[:, t, :], prev_h, prev_c, Wx, Wh, b)
+        h[:, t, :] = prev_h
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
